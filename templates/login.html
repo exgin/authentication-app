@@ -2,6 +2,7 @@
 
 <h1 class="display-2">Login</h1>
 <p class="lead">Welcome back!</p>
+<p><a href="/register">Don't have an account? Register now</a></p>
 
 <form method="POST">
   {{ form.hidden_tag() }} {% for field in form if field.widget.input_type != 'hidden' %}

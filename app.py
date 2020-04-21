@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, session, flash
 from flask_debugtoolbar import DebugToolbarExtension
-from models import connect_db, db, User
-from forms import LoginForm, RegisterForm
+from models import connect_db, db, User, Feedback
+from forms import LoginForm, RegisterForm, FeedbackForm
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgres:///feedback_db"
@@ -40,11 +40,31 @@ def register_page():
     else:
         return render_template('home-reg.html', form=form)
 
-@app.route('/secret')
-def show_secret():
-    """Only logged in users can view this part of the site"""
+@app.route('/users/<username>') 
+def show_secret(username):
+    """Only logged in users can view this part of the site, changed to show the
+    details of a user, expect their password of course
+    """
+    user = User.query.get_or_404(username)
 
-    return render_template('secret.html')
+    return render_template('secret.html', user=user)
+
+@app.route('/users/<username>/delete', methods=["POST"])
+def delete_user(username):
+    """Only a authenticated user can delete his/her own account"""
+
+    # we can't have not logged in users sending delete POST requests to this route
+    if "username" not in session or username != session['username']:
+        raise Unauthorized()
+    
+    user = User.query.get(username)
+    db.session.delete(user)
+    db.session.commit()
+    session.pop("username")
+
+    flash("Account deleted")
+    return redirect("/register")
+
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -60,8 +80,8 @@ def login():
 
         if user:
             # session allows us to stay logged in
-            session["username"] = user.username 
-            return redirect('/secret')
+            session["username"] = user.username
+            return redirect(f"/users/{username}")
         else:
             # handle an error
             form.username.errors = ["A wrong username/password was entered"]

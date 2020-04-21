@@ -1,7 +1,9 @@
 {% extends 'index.html' %} {% block content %}
 
 <h1 class="display-2">Register</h1>
-<p class="lead">Register for my site</p>
+<li><a href="/login">Already have an account? Login now</a></li>
+<p class="lead">or not, register here!</p>
+<ul> </ul>
 
 <form method="POST">
   {{ form.hidden_tag() }} {% for field in form if field.widget.input_type != 'hidden' %}
