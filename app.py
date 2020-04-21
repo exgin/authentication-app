@@ -36,7 +36,7 @@ def register_page():
         db.session.commit()
         session['username'] = user.username
 
-        return redirect('/secret')
+        return redirect(f"/users/{username}")
     else:
         return render_template('home-reg.html', form=form)
 
@@ -46,6 +46,11 @@ def show_secret(username):
     details of a user, expect their password of course
     """
     user = User.query.get_or_404(username)
+
+    # you have to be logged in & THE SAME username as the user logged in
+    if "username" not in session or username != session['username']:
+        raise Unauthorized()
+
 
     return render_template('secret.html', user=user)
 
@@ -64,6 +69,51 @@ def delete_user(username):
 
     flash("Account deleted")
     return redirect("/register")
+
+@app.route('/users/<username>/feedback/add', methods=["GET", "POST"])
+def add_feedback(username):
+    """Add feedback & handle its logic"""
+
+    # must be logged into the session
+    if "username" not in session or username != session['username']:
+        raise Unauthorized()
+
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.content.data
+        
+        feedback = Feedback(title=title, content=content, username=username)
+
+        db.session.add(feedback)
+        db.session.commit()
+        flash("Feedback created!")
+        return redirect(f"/users/{feedback.username}")
+    else:
+        return render_template("feedback-form.html", form=form)
+
+
+@app.route("/feedback/<int:feedback_id>/edit", methods=["GET", "POST"])
+def update_feedback(feedback_id):
+    """Show update-feedback form and process it."""
+
+    feedback = Feedback.query.get(feedback_id)
+
+    if "username" not in session or feedback.username != session['username']:
+        raise Unauthorized()
+
+    # remember when editing a form, have to set the object/model of the db to the form
+    form = FeedbackForm(obj=feedback)
+
+    if form.validate_on_submit():
+        feedback.title = form.title.data
+        feedback.content = form.content.data
+
+        db.session.commit()
+        return redirect(f"/users/{feedback.username}")
+    else:
+        return render_template("feedback-edit.html", form=form, feedback=feedback)
+
 
 
 @app.route('/login', methods=["GET", "POST"])

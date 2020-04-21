@@ -1,0 +1,20 @@
+{% extends 'index.html' %} {% block content %} {% if 'username' not in session %}
+<h1 class="display-3 text-center">Please login to view this page!</h1>
+<li><a href="/register">Register</a></li>
+<li><a href="/login">Login</a></li>
+{% endif %} {% if 'username' in session %}
+<h1>Edit your feedback</h1>
+
+<form method="POST">
+  {{ form.hidden_tag() }} {% for field in form if field.widget.input_type != 'hidden' %}
+  <p>
+    {{ field.label }} {{ field }} {% for error in field.errors %} {{ error }} {% endfor %}
+  </p>
+  {% endfor %}
+
+  <button class="btn btn-md btn-info" type="submit">Update now!</button>
+</form>
+<br />
+<p><a class="btn btn-md btn-outline-info" href="/users/{{feedback.username}}">Cancel</a></p>
+
+{% endif %} {% endblock %}
